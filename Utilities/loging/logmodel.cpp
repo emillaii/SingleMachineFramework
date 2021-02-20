@@ -2,23 +2,32 @@
 
 LogModel::LogModel()
 {
-    logRoleNames[LogModelColorRole] = "logColor";
+    logRoleNames[LogModelLevelRole] = "logLevel";
     logRoleNames[LogModelLogRole] = "logStr";
 }
 
-void LogModel::onLogBufferChanged(QList<LogItem *> logBuffer)
+void LogModel::append(int logLevel, const QString &msg)
 {
-    if (logs.count() > MAX_LINES)
-    {
-        removeFrontRows(N_REMOVE_LINES);
-    }
+    logBuffer.append(new LogItem{ logLevel, msg });
+}
 
-    beginInsertRows(QModelIndex(), logs.count(), logs.count() + logBuffer.count() - 1);
-    foreach (auto logItem, logBuffer)
+void LogModel::flush()
+{
+    if (logBuffer.count() > 0)
     {
-        logs.append(logItem);
+        if (logs.count() > MAX_LINES)
+        {
+            removeFrontRows(logs.count() - MAX_LINES / 2);
+        }
+
+        beginInsertRows(QModelIndex(), logs.count(), logs.count() + logBuffer.count() - 1);
+        foreach (auto logItem, logBuffer)
+        {
+            logs.append(logItem);
+        }
+        logBuffer.clear();
+        endInsertRows();
     }
-    endInsertRows();
 }
 
 void LogModel::onClearLog()
@@ -34,8 +43,7 @@ void LogModel::removeFrontRows(int rowCount)
     beginRemoveRows(QModelIndex(), 0, rowCount - 1);
     for (int i = 0; i < rowCount; i++)
     {
-        LogItem *logItem = logs.last();
-        logs.removeLast();
+        LogItem *logItem = logs.takeFirst();
         delete logItem;
     }
     endRemoveRows();

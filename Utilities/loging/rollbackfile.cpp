@@ -11,8 +11,8 @@ void RollbackFile::init(QString folder, QString fileName, qint64 maxSize, int nB
     this->flushImmediately = flushImmediately;
     dateForLogFolderName = QDateTime::currentDateTime();
     initFileStream();
+    stream.setCodec(QTextCodec::codecForName("utf-8"));
     stream.setDevice(&file);
-    stream.setCodec(QTextCodec::codecForName("utf8"));
 }
 
 void RollbackFile::appendLine(const QString &s)
@@ -23,17 +23,17 @@ void RollbackFile::appendLine(const QString &s)
     {
         dateChanged();
     }
-    QByteArray bytes = (s + "\n").toUtf8();
-    if (currentSize + bytes.length() > maxSize)
+    QByteArray bytes = s.toUtf8();
+    if (currentSize + bytes.length() + NewLineSize > maxSize)
     {
         rollBack();
     }
-    stream << bytes;
+    stream << bytes << "\n";
     if (flushImmediately)
     {
         stream.flush();
     }
-    currentSize += bytes.length();
+    currentSize += (bytes.length() + NewLineSize);
 }
 
 RollbackFile::~RollbackFile()

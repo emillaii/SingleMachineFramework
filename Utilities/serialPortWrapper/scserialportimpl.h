@@ -2,6 +2,7 @@
 #define SCSERIALPORTIMPL_H
 
 #include "configManager/configobject.h"
+#include "errorHandling/silicolerror.h"
 #include "highpricisiontimer.h"
 #include <QSerialPort>
 

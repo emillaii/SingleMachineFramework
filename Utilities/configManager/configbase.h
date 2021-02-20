@@ -56,7 +56,7 @@ public:
 
     virtual bool read(const QJsonValue &jsonValue) = 0;
     virtual void write(QJsonValue &jsonValue) = 0;
-    virtual void uniquelyConnectConfigChangedSignalToSlot(QObject *receiver, int slotIndex, bool connect);
+    virtual void uniquelyConnectConfigChangedSignalToSlot(QObject *receiver, int slotIndex, bool connect) = 0;
 
 private:
     friend class ConfigFile;

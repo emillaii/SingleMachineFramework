@@ -13,8 +13,8 @@
 
 /**
  * @brief The RollbackFile class
- * ĞÔÄÜ²âÊÔ£ºReleaseÄ£Ê½ÏÂ£¬flushImmediatelyÎªtrueÊ±£¬Ã¿ÌõlogÔ¼1.4us¡£flushImmediatelyÎªfalseÊ±£¬Ã¿ÌõlogÔ¼5.6us¡£
- * ½¨Òéµ÷ÊÔÆÚ¼ä£¬flushImmediatelyÉèÎªtrue£¬ÏµÍ³ÎÈ¶¨ºó¸ÄÎªfalse¡£
+ * æ€§èƒ½æµ‹è¯•ï¼šReleaseæ¨¡å¼ä¸‹ï¼ŒflushImmediatelyä¸ºtrueæ—¶ï¼Œæ¯æ¡logçº¦1.4usã€‚flushImmediatelyä¸ºfalseæ—¶ï¼Œæ¯æ¡logçº¦5.6usã€‚
+ * å»ºè®®è°ƒè¯•æœŸé—´ï¼ŒflushImmediatelyè®¾ä¸ºtrueï¼Œç³»ç»Ÿç¨³å®šåæ”¹ä¸ºfalseã€‚
  */
 class UTILITIESSHARED_EXPORT RollbackFile
 {
@@ -23,11 +23,11 @@ public:
     /**
      * @brief init
      * @param folder
-     * Ä¿Â¼Ãû£¬ÈÕÖ¾ÎÄ¼ş½«Î»ÓÚfolder/{currentDate}Ä¿Â¼ÏÂ£¬³ÌĞòÔËĞĞÆÚ¼ä¿çÈÕÆÚÊ±£¬ÈÕÖ¾ÎÄ¼ş½«ÖØ¶¨Î»µ½ĞÂµÄ{currentDate}Ä¿Â¼ÏÂ
-     * @param fileName  ÎÄ¼şÃû£¬²»º¬À©Õ¹Ãû
-     * @param maxSize    µ¥¸öÎÄ¼ş×î´ó´óĞ¡£¬³¬³ö´óĞ¡ºó£¬½«¸ÃÎÄ¼şÖØÃüÃû£¬Ìí¼Óºó×º.{index}£¬ĞÂµÄlogĞ´Èëµ½ĞÂ½¨µÄÎÄ¼şÖĞ¡£
-     * @param nBackupFile  ±£´æµÄ±¸·İÎÄ¼şµÄ×î´óÊıÁ¿£¬³¬³ö¸ÃÊıÁ¿Ê±£¬½«É¾³ı×îÔçµÄÈÕÖ¾ÎÄ¼ş
-     * @param flushImmediately  Ã¿ÌõlogÊÇ·ñÁ¢¼´Ğ´Èëµ½ÎÄ¼ş£¬»¹ÊÇÖ»Ğ´ÈëÁ÷¡£½¨Òéµ÷ÊÔÆÚ¼äÉèÎªtrue£¬ÏµÍ³ÎÈ¶¨ºó¸ÄÎªfalse¡£
+     * ç›®å½•åï¼Œæ—¥å¿—æ–‡ä»¶å°†ä½äºfolder/{currentDate}ç›®å½•ä¸‹ï¼Œç¨‹åºè¿è¡ŒæœŸé—´è·¨æ—¥æœŸæ—¶ï¼Œæ—¥å¿—æ–‡ä»¶å°†é‡å®šä½åˆ°æ–°çš„{currentDate}ç›®å½•ä¸‹
+     * @param fileName  æ–‡ä»¶åï¼Œä¸å«æ‰©å±•å
+     * @param maxSize    å•ä¸ªæ–‡ä»¶æœ€å¤§å¤§å°ï¼Œè¶…å‡ºå¤§å°åï¼Œå°†è¯¥æ–‡ä»¶é‡å‘½åï¼Œæ·»åŠ åç¼€.{index}ï¼Œæ–°çš„logå†™å…¥åˆ°æ–°å»ºçš„æ–‡ä»¶ä¸­ã€‚
+     * @param nBackupFile  ä¿å­˜çš„å¤‡ä»½æ–‡ä»¶çš„æœ€å¤§æ•°é‡ï¼Œè¶…å‡ºè¯¥æ•°é‡æ—¶ï¼Œå°†åˆ é™¤æœ€æ—©çš„æ—¥å¿—æ–‡ä»¶
+     * @param flushImmediately  æ¯æ¡logæ˜¯å¦ç«‹å³å†™å…¥åˆ°æ–‡ä»¶ï¼Œè¿˜æ˜¯åªå†™å…¥æµã€‚å»ºè®®è°ƒè¯•æœŸé—´è®¾ä¸ºtrueï¼Œç³»ç»Ÿç¨³å®šåæ”¹ä¸ºfalseã€‚
      */
     void init(QString folder, QString fileName, qint64 maxSize, int nBackupFile, bool flushImmediately);
     void appendLine(const QString &s);
@@ -37,6 +37,9 @@ private:
     void initFileStream();
     void rollBack();
     void dateChanged();
+
+private:
+    const int NewLineSize = 2;
 
     QDateTime dateForLogFolderName;
     QString folder;

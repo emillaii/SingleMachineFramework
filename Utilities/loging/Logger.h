@@ -13,14 +13,16 @@
 #define LOGGER_H
 
 #include "../commonmethod.h"
-#include "../configManager/qobjectfactory.h"
 #include "../utilities_global.h"
-#include "../zmqWrapper/publisher.h"
-#include "../zmqWrapper/subscriber.h"
 #include "LoggerConfig.h"
+#include "consoleoutputer.h"
 #include "functional"
-#include "utility.h"
+#include "logpublisher.h"
+#include "logsaver.h"
 #include <QDateTime>
+#include <QQmlContext>
+#include <QQmlEngine>
+#include <QThread>
 
 class UTILITIESSHARED_EXPORT Logger : public QObject
 {
@@ -36,41 +38,37 @@ public:
         return &instance;
     }
 
+    void setContextProperty(QQmlEngine &engine);
+
     void registerCategory(QLoggingCategory *category);
-
-    void init(bool outputLogToLocalConsole = false);
-
-    void msgHandler(const QJsonObject &jsonObj);
 
     static void qlogMessageHandler(QtMsgType msgType, const QMessageLogContext &context, const QString &msg);
 
     ~Logger() override;
 
+signals:
+    void newLog(QString category, int logLevel, QString msg);
+
+private slots:
+    void onLogLevelChanged(int logLevel);
+
 private:
-    void initLogLevel(const QString &categoryName);
+    void setLogEnable(QLoggingCategory *category, int logLevel);
 
-    void handleSetLogLevel(const QString &category, int logLevel);
-
-    void handleGetLogLevel(const QString &category);
-
-    void setLogEnable(QLoggingCategory &category, int logLevel);
-
-    void setLogEnable(QLoggingCategory &category, QtMsgType qmsgType, int logLevel)
+    void setLogEnable(QLoggingCategory *category, QtMsgType qmsgType, int logLevel)
     {
-        category.setEnabled(qmsgType, qmsgTypeToLevel[qmsgType] >= logLevel);
+        category->setEnabled(qmsgType, qmsgTypeToLevel[qmsgType] >= logLevel);
     }
 
 private:
-    bool isInit = false;
-    bool outputLogToLocalConsole = false;
     LoggerConfig *loggerConfig = nullptr;
-    ConfigFile *logConfigFile = nullptr;
-    QMap<QString, QLoggingCategory *> logCategorys;
-    QMap<QString, LogCategoryConfig *> logCategoryConfigs;
+    ConfigFile *loggerConfigFile = nullptr;
+    QList<QLoggingCategory *> logCategorys;
     QMap<QtMsgType, int> qmsgTypeToLevel;
-    Publisher *msgPublisher;
-    Subscriber *msgSubscriber;
     ConsoleOutputer consoleOutputer;
+    LogSaver *logSaver;
+    QThread saveLogThd;
+    LogPublisher *logPublisher;
 };
 
 class CategoryRegister
@@ -82,12 +80,12 @@ public:
     }
 };
 
-#define SILICOOL_CREATE_LOGGING_CATEGORY(categoryGetterName, categoryName)                                             \
-    QLoggingCategory &categoryGetterName()                                                                             \
-    {                                                                                                                  \
-        static QLoggingCategory category(categoryName);                                                                \
-        return category;                                                                                               \
-    }                                                                                                                  \
+#define SILICOOL_CREATE_LOGGING_CATEGORY(categoryGetterName, categoryName)                                                                           \
+    QLoggingCategory &categoryGetterName()                                                                                                           \
+    {                                                                                                                                                \
+        static QLoggingCategory category(categoryName);                                                                                              \
+        return category;                                                                                                                             \
+    }                                                                                                                                                \
     static CategoryRegister categoryGetterName##___(categoryGetterName());
 
 #define SILICOOL_DECLARE_LOGGING_CATEGORY(name, exportStatement) extern exportStatement QLoggingCategory &name();

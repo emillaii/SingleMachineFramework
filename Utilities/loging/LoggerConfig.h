@@ -1,38 +1,68 @@
-#ifndef LOGPARAMETER_H
-#define LOGPARAMETER_H
+#ifndef LOGGERCONFIG_H
+#define LOGGERCONFIG_H
 
 #include "../configManager/configfile.h"
-#include "../configManager/configobjectarray.h"
 #include "../utilities_global.h"
 
-class UTILITIESSHARED_EXPORT LogCategoryConfig : public ConfigObject
+class UTILITIESSHARED_EXPORT LoggerConfig : public ConfigObject
 {
     Q_OBJECT
 
-    int m_logLevel = 0;
-    QString m_category;
+    Q_PROPERTY(QString logDir READ logDir WRITE setLogDir NOTIFY logDirChanged)
+    Q_PROPERTY(int logLevel READ logLevel WRITE setLogLevel NOTIFY logLevelChanged)
+    Q_PROPERTY(int maxFileSize READ maxFileSize WRITE setMaxFileSize NOTIFY maxFileSizeChanged)
+    Q_PROPERTY(int maxFileCount READ maxFileCount WRITE setMaxFileCount NOTIFY maxFileCountChanged)
+    Q_PROPERTY(bool flushImmediately READ flushImmediately WRITE setFlushImmediately NOTIFY flushImmediatelyChanged)
+    Q_PROPERTY(bool outputLogToConsole READ outputLogToConsole WRITE setOutputLogToConsole NOTIFY outputLogToConsoleChanged)
 
 public:
-    Q_INVOKABLE explicit LogCategoryConfig(QObject *parent = nullptr) : ConfigObject(parent)
+    LoggerConfig()
     {
         disableTranslate();
         init();
     }
 
-    Q_PROPERTY(QString category READ category WRITE setCategory NOTIFY categoryChanged)
-    Q_PROPERTY(int logLevel READ logLevel WRITE setLogLevel NOTIFY logLevelChanged)
+    QString logDir() const
+    {
+        return m_logDir;
+    }
 
     int logLevel() const
     {
         return m_logLevel;
     }
 
-    QString category() const
+    int maxFileSize() const
     {
-        return m_category;
+        return m_maxFileSize;
+    }
+
+    int maxFileCount() const
+    {
+        return m_maxFileCount;
+    }
+
+    bool flushImmediately() const
+    {
+        return m_flushImmediately;
+    }
+
+    bool outputLogToConsole() const
+    {
+        return m_outputLogToConsole;
     }
 
 public slots:
+
+    void setLogDir(QString logDir)
+    {
+        if (m_logDir == logDir)
+            return;
+
+        m_logDir = logDir;
+        emit logDirChanged(m_logDir);
+    }
+
     void setLogLevel(int logLevel)
     {
         if (m_logLevel == logLevel)
@@ -42,79 +72,62 @@ public slots:
         emit logLevelChanged(m_logLevel);
     }
 
-    void setCategory(QString category)
+    void setMaxFileSize(int maxFileSize)
     {
-        if (m_category == category)
+        if (m_maxFileSize == maxFileSize)
             return;
 
-        m_category = category;
-        emit categoryChanged(m_category);
+        m_maxFileSize = maxFileSize;
+        emit maxFileSizeChanged(m_maxFileSize);
+    }
+
+    void setMaxFileCount(int maxFileCount)
+    {
+        if (m_maxFileCount == maxFileCount)
+            return;
+
+        m_maxFileCount = maxFileCount;
+        emit maxFileCountChanged(m_maxFileCount);
+    }
+
+    void setFlushImmediately(bool flushImmediately)
+    {
+        if (m_flushImmediately == flushImmediately)
+            return;
+
+        m_flushImmediately = flushImmediately;
+        emit flushImmediatelyChanged(m_flushImmediately);
+    }
+
+    void setOutputLogToConsole(bool outputLogToConsole)
+    {
+        if (m_outputLogToConsole == outputLogToConsole)
+            return;
+
+        m_outputLogToConsole = outputLogToConsole;
+        emit outputLogToConsoleChanged(m_outputLogToConsole);
     }
 
 signals:
+    void logDirChanged(QString logDir);
+
     void logLevelChanged(int logLevel);
-    void categoryChanged(QString category);
-};
 
-class UTILITIESSHARED_EXPORT LoggerConfig : public ConfigObject
-{
-    Q_OBJECT
+    void maxFileSizeChanged(int maxFileSize);
 
-    Q_PROPERTY(ConfigObjectArray *categoryConfigs READ categoryConfigs)
-    Q_PROPERTY(QString logPublishAddr READ logPublishAddr WRITE setLogPublishAddr NOTIFY logPublishAddrChanged)
-    Q_PROPERTY(QString msgSubscribeAddr READ msgSubscribeAddr WRITE setMsgSubscribeAddr NOTIFY msgSubscribeAddrChanged)
+    void maxFileCountChanged(int maxFileCount);
 
-public:
-    LoggerConfig()
-    {
-        m_categoryConfigs = new ConfigObjectArray(&LogCategoryConfig::staticMetaObject, this);
-        disableTranslate();
-        init();
-    }
+    void flushImmediatelyChanged(bool flushImmediately);
 
-    ConfigObjectArray *categoryConfigs() const
-    {
-        return m_categoryConfigs;
-    }
-
-    QString logPublishAddr() const
-    {
-        return m_logPublishAddr;
-    }
-
-    QString msgSubscribeAddr() const
-    {
-        return m_msgSubscribeAddr;
-    }
-
-public slots:
-
-    void setLogPublishAddr(QString logPublishAddr)
-    {
-        if (m_logPublishAddr == logPublishAddr)
-            return;
-
-        m_logPublishAddr = logPublishAddr;
-        emit logPublishAddrChanged(m_logPublishAddr);
-    }
-
-    void setMsgSubscribeAddr(QString msgSubscribeAddr)
-    {
-        if (m_msgSubscribeAddr == msgSubscribeAddr)
-            return;
-
-        m_msgSubscribeAddr = msgSubscribeAddr;
-        emit msgSubscribeAddrChanged(m_msgSubscribeAddr);
-    }
-
-signals:
-    void logPublishAddrChanged(QString logPublishAddr);
-    void msgSubscribeAddrChanged(QString msgSubscribeAddr);
+    void outputLogToConsoleChanged(bool outputLogToConsole);
 
 private:
-    ConfigObjectArray *m_categoryConfigs;
-    QString m_logPublishAddr = "tcp://127.0.0.1:60010";
-    QString m_msgSubscribeAddr = "tcp://127.0.0.1:60001";
+    QString m_logDir = "C:/SilicoolLog";
+    int m_logLevel = 0;
+    int m_maxFileSize = 1024 * 1024 * 5;
+    int m_maxFileCount = 50;
+    bool m_flushImmediately = true;
+    bool m_outputLogToConsole = true;
 };
 
-#endif    // LOGPARAMETER_H
+#endif    // LOGGERCONFIG_H

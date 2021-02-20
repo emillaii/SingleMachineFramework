@@ -2,12 +2,18 @@
 #define LOGMODEL_H
 
 #include "../utilities_global.h"
-#include "LogBuffer.h"
 #include <QAbstractListModel>
+
+struct LogItem
+{
+public:
+    int level;
+    QString log;
+};
 
 enum LogModelRole
 {
-    LogModelColorRole = Qt::UserRole + 1,
+    LogModelLevelRole = Qt::UserRole + 1,
     LogModelLogRole
 };
 
@@ -28,9 +34,9 @@ public:
     {
         if (index.row() >= 0 && index.row() < logs.count())
         {
-            if (role == LogModelColorRole)
+            if (role == LogModelLevelRole)
             {
-                return QVariant(logs[index.row()]->color);
+                return QVariant(logs[index.row()]->level);
             }
             if (role == LogModelLogRole)
             {
@@ -45,8 +51,10 @@ public:
         return logRoleNames;
     }
 
+    void append(int logLevel, const QString &msg);
+    void flush();
+
 public slots:
-    void onLogBufferChanged(QList<LogItem *> logBuffer);
     void onClearLog();
 
 private:
@@ -54,8 +62,8 @@ private:
 
 private:
     const int MAX_LINES = 1500;
-    const int N_REMOVE_LINES = 500;
     QList<LogItem *> logs;
+    QList<LogItem *> logBuffer;
     QHash<int, QByteArray> logRoleNames;
 };
 

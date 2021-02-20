@@ -1,0 +1,26 @@
+/AdaptVisionLib
+/BonderLib
+/SCAALib
+/SCMotionLib
+/SCVisionLib
+/UtilitiesLib
+/libs
+/UtilitiesTest
+*.pro.user
+/build-*
+Exported_PR_EXE/
+<<<<<<< .merge_file_a02244
+SCAALib.7z
+=======
+Debug/
+Release/
+bin/
+.vs/
+SCAOALib/
+lib/
+DTCCM2_SDK/
+.qmake.stash
+Makefile*
+>>>>>>> .merge_file_a05380
+SCAA/SCAA.pro.user.70665ca
+SCAA/SCAA.pro.user.8605c36

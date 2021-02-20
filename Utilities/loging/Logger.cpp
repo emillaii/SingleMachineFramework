@@ -1,5 +1,4 @@
 #include "Logger.h"
-#include <iostream>
 
 Logger::Logger()
 {
@@ -9,144 +8,77 @@ Logger::Logger()
     qmsgTypeToLevel[QtCriticalMsg] = LogLevel::Critical;
     qmsgTypeToLevel[QtFatalMsg] = LogLevel::Fatal;
 
-    msgPublisher = new Publisher("!@#$%");
-    msgSubscriber = new Subscriber(nullptr, "!@#$%");
+    loggerConfig = new LoggerConfig;
+    loggerConfigFile = new ConfigFile("LoggerConfig", loggerConfig, "./config/loggerConfig.json", false);
+    loggerConfigFile->populate(true);
+
+    logSaver = new LogSaver(loggerConfig);
+    logPublisher = new LogPublisher();
+    logSaver->moveToThread(&saveLogThd);
+    saveLogThd.start();
+
+    connect(&saveLogThd, &QThread::finished, logSaver, &LogSaver::deleteLater);
+    connect(loggerConfig, &LoggerConfig::logLevelChanged, this, &Logger::onLogLevelChanged);
+
+    connect(this, &Logger::newLog, logSaver, &LogSaver::onNewLog);
+    connect(this, &Logger::newLog, logPublisher, &LogPublisher::onNewLog);
+
+    qSetMessagePattern("%{function}");
+    qInstallMessageHandler(qlogMessageHandler);
 
     registerCategory(QLoggingCategory::defaultCategory());
 }
 
+void Logger::setContextProperty(QQmlEngine &engine)
+{
+    engine.rootContext()->setContextProperty("$logPublisher", logPublisher);
+    engine.rootContext()->setContextProperty("$loggerConfig", loggerConfig);
+}
+
 void Logger::registerCategory(QLoggingCategory *category)
 {
-    logCategorys[category->categoryName()] = category;
-    if (isInit)
-    {
-        initLogLevel(category->categoryName());
-    }
-}
-
-void Logger::init(bool outputLogToLocalConsole)
-{
-    this->outputLogToLocalConsole = outputLogToLocalConsole;
-    loggerConfig = new LoggerConfig;
-    logConfigFile = new ConfigFile("LoggerConfig", loggerConfig, "./config/logConfig/loggerConfig.json", false);
-    logConfigFile->populate(true);
-    auto categoryConfigs = loggerConfig->categoryConfigs();
-    for (int i = 0; i < categoryConfigs->count(); i++)
-    {
-        auto categoryConfig = categoryConfigs->getConfig<LogCategoryConfig>(i);
-        logCategoryConfigs[categoryConfig->category()] = categoryConfig;
-    }
-    foreach (auto registeredCategory, logCategorys.keys())
-    {
-        initLogLevel(registeredCategory);
-    }
-
-    try
-    {
-        msgPublisher->bind(loggerConfig->logPublishAddr());
-        msgSubscriber->subscribe(loggerConfig->msgSubscribeAddr());
-    }
-    catch (std::exception &ex)
-    {
-        qFatal(ex.what());
-    }
-    msgSubscriber->installMessageHandle(std::bind(&Logger::msgHandler, this, std::placeholders::_1));
-    msgSubscriber->startListenMessage();
-
-    qSetMessagePattern("%{function}");
-    qInstallMessageHandler(qlogMessageHandler);
-    isInit = true;
-}
-
-void Logger::msgHandler(const QJsonObject &jsonObj)
-{
-    QString msgName = jsonObj["msgName"].toString();
-    if (msgName == "setLogLevel")
-    {
-        handleSetLogLevel(jsonObj["category"].toString(), jsonObj["level"].toInt());
-    }
-    else if (msgName == "getLogLevel")
-    {
-        handleGetLogLevel(jsonObj["category"].toString());
-    }
+    logCategorys.append(category);
+    setLogEnable(category, loggerConfig->logLevel());
 }
 
 void Logger::qlogMessageHandler(QtMsgType msgType, const QMessageLogContext &context, const QString &msg)
 {
-    QJsonObject jsonObj;
     auto ins = getIns();
-    QString time = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz");
-    jsonObj["msgName"] = "newLog";
-    jsonObj["time"] = time;
-    jsonObj["category"] = context.category;
+
     int logLevel = ins->qmsgTypeToLevel[msgType];
-    jsonObj["level"] = logLevel;
     auto souceCodeFileName = QFileInfo(context.file).fileName();
-    jsonObj["location"]
-        = QString("%1:%2(%3)").arg(souceCodeFileName).arg(context.line).arg(qFormatLogMessage(msgType, context, msg));
-    jsonObj["log"] = msg;
+    QString location = QString("%1:%2(%3)").arg(souceCodeFileName).arg(context.line).arg(qFormatLogMessage(msgType, context, msg));
+    QString formatedMsg = QString("%1 [%2] [%3] %4: %5")
+                              .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss.zzz"))
+                              .arg(context.category)
+                              .arg(LogLevel::getIns().toString(logLevel))
+                              .arg(location)
+                              .arg(msg);
 
-    ins->msgPublisher->sendJson(jsonObj);
-
-    if (ins->outputLogToLocalConsole)
+    emit ins->newLog(context.category, logLevel, formatedMsg);
+    if (ins->loggerConfig->outputLogToConsole())
     {
-        QString postfixMsg = QString("[%1] %2:%3")
-                                 .arg(LogLevel::getIns().toString(logLevel))
-                                 .arg(jsonObj["location"].toString())
-                                 .arg(jsonObj["log"].toString());
-        QString formatedMsg = QString("%1 [%2] %3").arg(time).arg(context.category).arg(postfixMsg);
         ins->consoleOutputer.outputLogToConsole(logLevel, formatedMsg);
     }
 }
 
 Logger::~Logger()
 {
-    msgSubscriber->stopListenMessage();
+    qSetMessagePattern("%{if-category}%{category}: %{endif}%{message}");
     qInstallMessageHandler(nullptr);
-    SILICOOL_DELETE(logConfigFile);
-    SILICOOL_DELETE(loggerConfig);
-    msgPublisher->deleteLater();
-    msgSubscriber->deleteLater();
+    saveLogThd.quit();
+    saveLogThd.wait();
 }
 
-void Logger::initLogLevel(const QString &categoryName)
+void Logger::onLogLevelChanged(int logLevel)
 {
-    if (!logCategoryConfigs.contains(categoryName))
+    foreach (auto category, logCategorys)
     {
-        LogCategoryConfig *newCategoryConfig = new LogCategoryConfig();
-        newCategoryConfig->setCategory(categoryName);
-        logCategoryConfigs[categoryName] = newCategoryConfig;
-        loggerConfig->categoryConfigs()->executeAddConfigObject(0, newCategoryConfig);
-    }
-    auto categoryConfig = logCategoryConfigs[categoryName];
-    if (categoryConfig->logLevel() >= LogLevel::Debug && categoryConfig->logLevel() < LogLevel::Fatal)
-    {
-        setLogEnable(*logCategorys[categoryName], categoryConfig->logLevel());
+        setLogEnable(category, logLevel);
     }
 }
 
-void Logger::handleSetLogLevel(const QString &category, int logLevel)
-{
-    if (logCategorys.contains(category))
-    {
-        setLogEnable(*logCategorys[category], logLevel);
-        logCategoryConfigs[category]->setLogLevel(logLevel);
-    }
-}
-
-void Logger::handleGetLogLevel(const QString &category)
-{
-    if (logCategoryConfigs.contains(category))
-    {
-        QJsonObject jsonObj;
-        jsonObj["msgName"] = "getLogLevelRsp";
-        jsonObj["category"] = category;
-        jsonObj["logLevel"] = logCategoryConfigs[category]->logLevel();
-        msgPublisher->sendJson(jsonObj);
-    }
-}
-
-void Logger::setLogEnable(QLoggingCategory &category, int logLevel)
+void Logger::setLogEnable(QLoggingCategory *category, int logLevel)
 {
     setLogEnable(category, QtDebugMsg, logLevel);
     setLogEnable(category, QtInfoMsg, logLevel);

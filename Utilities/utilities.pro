@@ -59,7 +59,7 @@ SOURCES += \
         highpricisiontimer.cpp \
 #        imageprovider.cpp \
 #        indexvalidator.cpp \
-#        languageManager/languagemanager.cpp \
+        languageManager/languagemanager.cpp \
 #        loghelper.cpp \
         loging/Logger.cpp \
         loging/consoleoutputer.cpp \
@@ -97,7 +97,7 @@ HEADERS += \
 #        TaskEngine/samethreadinstructionexecutor.h \
 #        TaskEngine/taskenginee.h \
 #        TaskEngine/taskengineemanager.h \
-#        basicconfig.h \
+        basicconfig.h \
         commonmethod.h \
         configManager/configarray.h \
         configManager/configbase.h \
@@ -122,8 +122,8 @@ HEADERS += \
         highpricisiontimer.h \
 #        imageprovider.h \
 #        indexvalidator.h \
-#        languageManager/languageconfig.h \
-#        languageManager/languagemanager.h \
+        languageManager/languageconfig.h \
+        languageManager/languagemanager.h \
 #        loghelper.h \
         loging/Logger.h \
         loging/LoggerConfig.h \

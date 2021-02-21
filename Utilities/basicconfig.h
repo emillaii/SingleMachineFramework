@@ -3,7 +3,6 @@
 
 #include "languageManager/languageconfig.h"
 #include "utilities_global.h"
-#include <enumhelper.h>
 
 class UTILITIESSHARED_EXPORT BasicConfig : public ConfigObject
 {
@@ -28,7 +27,6 @@ public:
     Q_PROPERTY(QString dutType READ dutType WRITE setDutType NOTIFY dutTypeChanged)
     Q_PROPERTY(QString lastInputUser READ lastInputUser WRITE setLastInputUser NOTIFY lastInputUserChanged)
     Q_PROPERTY(ChartTheme chartTheme READ chartTheme WRITE setChartTheme NOTIFY chartThemeChanged)
-    Q_PROPERTY(QString macAddress READ macAddress WRITE setMacAddress NOTIFY macAddressChanged)
 
 public:
     BasicConfig(QObject *parent = nullptr) : ConfigObject(parent)
@@ -60,11 +58,6 @@ public:
     ChartTheme chartTheme() const
     {
         return m_chartTheme;
-    }
-
-    QString macAddress() const
-    {
-        return m_macAddress;
     }
 
 public slots:
@@ -104,15 +97,6 @@ public slots:
         emit chartThemeChanged(m_chartTheme);
     }
 
-    void setMacAddress(QString macAddress)
-    {
-        if (m_macAddress == macAddress)
-            return;
-
-        m_macAddress = macAddress;
-        emit macAddressChanged(m_macAddress);
-    }
-
 signals:
     void dutTypeChanged(QString dutType);
 
@@ -122,15 +106,12 @@ signals:
 
     void chartThemeChanged(ChartTheme chartTheme);
 
-    void macAddressChanged(QString macAddress);
-
 private:
     LanguageConfig *m_languageConfig;
     QString m_dutType = "DefaultDUT";
     QString m_skin;
     QString m_lastInputUser;
     ChartTheme m_chartTheme{ ChartThemeLight };
-    QString m_macAddress = "";
 };
 
 #endif    // BASICCONFIG_H

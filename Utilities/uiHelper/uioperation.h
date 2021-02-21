@@ -3,13 +3,13 @@
 
 #include "../commonmethod.h"
 #include "../utilities_global.h"
-#include "TaskEngine/instructionexecutionclient.h"
 #include "btnnamedefinition.h"
 #include "msgboxmodel.h"
 #include <QDebug>
 #include <QObject>
+#include <QQmlContext>
+#include <QQmlEngine>
 #include <QQuickItem>
-#include <QRemoteObjectNode>
 #include <QThread>
 #include <QUuid>
 
@@ -42,9 +42,9 @@ public:
         return &instance;
     }
 
-    Q_INVOKABLE void setGrabMouseItem(QQuickItem *item);
+    void setContextProperty(QQmlEngine &engine);
 
-    void init(QString uiReqReceiverObjName);
+    Q_INVOKABLE void setGrabMouseItem(QQuickItem *item);
 
     Q_INVOKABLE void showMessage(QString title, QString content, MsgBoxIcon::Icon icon, QList<QString> buttons);
     Q_INVOKABLE void showMessage(QString title, QString content, MsgBoxIcon::Icon icon, QString button);
@@ -56,6 +56,9 @@ public:
     Q_INVOKABLE bool yesNoConfirm(QString content);
     Q_INVOKABLE bool okCancelConfirm(QString content);
 
+signals:
+    void addMsgBoxReq(QString uuid, QString title, QString content, int icon, QList<QString> buttons, QPrivateSignal);
+
 public slots:
     void onUIResponse(QString uuid, QString clickedButton);
 
@@ -65,9 +68,9 @@ private:
 
 private:
     QMap<QString, UIResponse *> uiRsp;
+    MsgBoxModel m_msgBoxModel;
     QQuickItem *grabMouseItem = nullptr;
-    bool isInit = false;
-    QString uiReqReceiverObjName = "UndefinedName";
+    QMutex locker;
 };
 
 #endif    // UIOPERATION_H

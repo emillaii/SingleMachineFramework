@@ -41,10 +41,10 @@ QHash<int, QByteArray> MsgBoxModel::roleNames() const
     return msgBoxRoleNames;
 }
 
-void MsgBoxModel::addMsgBox(const MsgBoxItem &msgBox)
+void MsgBoxModel::onAddMsgBox(QString uuid, QString title, QString content, int icon, QList<QString> buttons)
 {
     beginInsertRows(QModelIndex(), 0, 0);
-    msgBoxes.insert(0, msgBox);
+    msgBoxes.insert(0, MsgBoxItem(uuid, title, static_cast<MsgBoxIcon::Icon>(icon), content, buttons));
     endInsertRows();
     emit msgBoxCountChanged(msgBoxes.count());
 }

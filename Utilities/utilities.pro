@@ -50,7 +50,7 @@ SOURCES += \
 #        errorHandling/actionerror.cpp \
 #        errorHandling/kicktrayerror.cpp \
 #        errorHandling/scrunnable.cpp \
-#        errorHandling/silicolerror.cpp \
+        errorHandling/silicolerror.cpp \
 #        errorHandling/silicolerrorhandler.cpp \
 #        extendedqtimer.cpp \
 #        externexelaucher.cpp \
@@ -80,9 +80,8 @@ SOURCES += \
 #        systemCore/workerevent.cpp \
 #        trayMap/trayconfig.cpp \
 #        trayMap/traymap.cpp \
-#        uiHelper/msgboxmodel.cpp \
-#        uiHelper/uioperation.cpp \
-#        uiHelper/uioperationimpl.cpp \
+        uiHelper/msgboxmodel.cpp \
+        uiHelper/uioperation.cpp \
 #        uphhelper.cpp \
 #        userManagement/mysqltablemodel.cpp \
 #        userManagement/usermanagement.cpp
@@ -107,13 +106,13 @@ HEADERS += \
         configManager/configobjectarray.h \
         configManager/configobjectlanguagemanager.h \
 #        duttypemanager.h \
-#        enumhelper.h \
+        enumhelper.h \
 #        errorHandling/actionerror.h \
-#        errorHandling/errorhandlingoption.h \
+        errorHandling/errorhandlingoption.h \
 #        errorHandling/kicktrayerror.h \
 #        errorHandling/scassert.h \
 #        errorHandling/scrunnable.h \
-#        errorHandling/silicolerror.h \
+        errorHandling/silicolerror.h \
 #        errorHandling/silicolerrorhandler.h \
 #        extendedqtimer.h \
 #        externexelaucher.h \
@@ -153,10 +152,9 @@ HEADERS += \
 #        trayMap/materialdata.h \
 #        trayMap/trayconfig.h \
 #        trayMap/traymap.h \
-#        uiHelper/btnnamedefinition.h \
-#        uiHelper/msgboxmodel.h \
-#        uiHelper/uioperation.h \
-#        uiHelper/uioperationimpl.h \
+        uiHelper/btnnamedefinition.h \
+        uiHelper/msgboxmodel.h \
+        uiHelper/uioperation.h \
 #        uphhelper.h \
 #        userManagement/mysqltablemodel.h \
 #        userManagement/usermanagement.h \

@@ -1,30 +1,27 @@
 #include "uioperation.h"
 
-UIOperation::UIOperation() {}
+UIOperation::UIOperation()
+{
+    connect(this, &UIOperation::addMsgBoxReq, &m_msgBoxModel, &MsgBoxModel::onAddMsgBox);
+}
+
+void UIOperation::setContextProperty(QQmlEngine &engine)
+{
+    engine.rootContext()->setContextProperty("$msgBoxModel", &m_msgBoxModel);
+    engine.rootContext()->setContextProperty("$uiOperation", this);
+}
 
 void UIOperation::setGrabMouseItem(QQuickItem *item)
 {
     grabMouseItem = item;
 }
 
-void UIOperation::init(QString uiReqReceiverObjName)
-{
-    this->uiReqReceiverObjName = uiReqReceiverObjName;
-    if (!isInit)
-    {
-        connect(InstructionExecutionClient::getIns().getIeReplica(), &InstructionExecutorReplica::uiResponse, this,
-                &UIOperation::onUIResponse);
-        isInit = true;
-    }
-}
-
 void UIOperation::showMessage(QString title, QString content, MsgBoxIcon::Icon icon, QList<QString> buttons)
 {
     getLogger(icon) << QString("showMessage, title: %1, content: %2").arg(title).arg(content);
 
-    QVariantList args;
-    args << title << content << icon << QVariant::fromValue(toVariantList(buttons));
-    InstructionExecutionClient::getIns().executeInstruction(uiReqReceiverObjName, "showMessage", args);
+    QString uuid = QUuid::createUuid().toString(QUuid::Id128);
+    emit addMsgBoxReq(uuid, title, content, icon, buttons, {});
 }
 
 void UIOperation::showMessage(QString title, QString content, MsgBoxIcon::Icon icon, QString button)
@@ -35,27 +32,25 @@ void UIOperation::showMessage(QString title, QString content, MsgBoxIcon::Icon i
 QString UIOperation::getUIResponse(QString title, QString content, MsgBoxIcon::Icon icon, QList<QString> buttons)
 {
     auto logger = getLogger(icon);
-    logger << QString("getUIResponse, title: %1, content: %2, buttons: %3")
-                  .arg(title)
-                  .arg(content)
-                  .arg(combineString("|", buttons));
+    logger << QString("getUIResponse, title: %1, content: %2, buttons: %3").arg(title).arg(content).arg(combineString("|", buttons));
 
-    QVariantList args;
-    args << title << content << icon << QVariant::fromValue(toVariantList(buttons));
-    QString instructionId
-        = InstructionExecutionClient::getIns().executeInstruction(uiReqReceiverObjName, "getUIResponse", args, true);
+    QString uuid = QUuid::createUuid().toString(QUuid::Id128);
+    auto response = new UIResponse();
+    {
+        QMutexLocker t(&locker);
+        uiRsp[uuid] = response;
+    }
+    emit addMsgBoxReq(uuid, title, content, icon, buttons, {});
 
     resetMouse();
-    QString uuid = InstructionExecutionClient::getIns().getInstructionExecutionResult<QString>(instructionId);
-
-    UIResponse *response = new UIResponse;
-    uiRsp[uuid] = response;
-
     silicoolWait(
         -1, [&response] { return response->gotResponse; }, 50);
 
+    {
+        QMutexLocker t(&locker);
+        uiRsp.remove(uuid);
+    }
     QString clickedButton = response->clickedButton;
-    uiRsp.remove(uuid);
     delete response;
 
     logger << QString("getUIResponse, user clicked button: %1").arg(clickedButton);
@@ -91,11 +86,14 @@ bool UIOperation::okCancelConfirm(QString content)
 
 void UIOperation::onUIResponse(QString uuid, QString clickedButton)
 {
-    if (silicoolWait(
-            100, [&] { return uiRsp.contains(uuid); }, 10))
+    m_msgBoxModel.removeMsgBox(uuid);
+
+    QMutexLocker t(&locker);
+    if (uiRsp.contains(uuid))
     {
-        uiRsp[uuid]->clickedButton = clickedButton;
-        uiRsp[uuid]->gotResponse = true;
+        auto rsp = uiRsp[uuid];
+        rsp->clickedButton = clickedButton;
+        rsp->gotResponse = true;
     }
 }
 
@@ -114,12 +112,9 @@ QDebug UIOperation::getLogger(MsgBoxIcon::Icon icon)
 
 void UIOperation::resetMouse()
 {
-    if (isInMainThread())
+    if (isInMainThread() && grabMouseItem)
     {
-        if (grabMouseItem)
-        {
-            grabMouseItem->grabMouse();
-            grabMouseItem->ungrabMouse();
-        }
+        grabMouseItem->grabMouse();
+        grabMouseItem->ungrabMouse();
     }
 }

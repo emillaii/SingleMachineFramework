@@ -4,8 +4,6 @@ import QtQuick.Layouts 1.0
 import MsgBoxIcon 1.0
 
 Popup {
-    property var uiOperationImplementation: null
-
     property int msgBoxWidth: 500
     property int msgBoxHeight: 200
     property int maxMsgBoxesToShow: 3
@@ -68,7 +66,7 @@ Popup {
             anchors.left: parent.left
             anchors.right: parent.right
             clip: true
-            model: msgBoxModel
+            model: $msgBoxModel
 
             delegate: Rectangle{
                 width: msgBoxWidth
@@ -148,7 +146,7 @@ Popup {
                         delegate: Button{
                             text: modelData
                             onClicked: {
-                                uiOperationImplementation.onUIResponse(uuid, text)
+                                $uiOperation.onUIResponse(uuid, text)
                             }
                         }
                     }
@@ -156,6 +154,22 @@ Popup {
             }
 
             ScrollBar.vertical: ScrollBar{}
+        }
+    }
+
+    Component.onCompleted: {
+        $uiOperation.setGrabMouseItem(contentItem)
+    }
+
+    Connections {
+        target: $msgBoxModel
+        onMsgBoxCountChanged: {
+            if (count > 0) {
+                msgBoxCount = count
+                open()
+            } else {
+                close()
+            }
         }
     }
 }

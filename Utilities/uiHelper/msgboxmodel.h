@@ -44,11 +44,7 @@ class MsgBoxItem
 public:
     MsgBoxItem() = default;
 
-    MsgBoxItem(const QString &uuid,
-               const QString &title,
-               MsgBoxIcon::Icon icon,
-               const QString &content,
-               const QList<QString> &buttons)
+    MsgBoxItem(const QString &uuid, const QString &title, MsgBoxIcon::Icon icon, const QString &content, const QList<QString> &buttons)
     {
         this->uuid = uuid;
         this->title = title;
@@ -80,8 +76,10 @@ public:
     virtual QVariant data(const QModelIndex &index, int role) const override;
     virtual QHash<int, QByteArray> roleNames() const override;
 
-    void addMsgBox(const MsgBoxItem &msgBox);
     void removeMsgBox(const QString &uuid);
+
+public slots:
+    void onAddMsgBox(QString uuid, QString title, QString content, int icon, QList<QString> buttons);
 
 signals:
     void msgBoxCountChanged(int count);
